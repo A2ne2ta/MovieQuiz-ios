@@ -24,7 +24,7 @@ struct QuizResultsViewModel {
     let buttonText: String
 }
 
-class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController {
     
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var textLabel: UILabel!
@@ -81,7 +81,7 @@ class MovieQuizViewController: UIViewController {
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
-        //        super.viewDidLoad()
+        super.viewDidLoad()
         // берём текущий вопрос из массива вопросов по индексу текущего вопроса
         let currentQuestion = questions[currentQuestionIndex]
         let model = convert(model: currentQuestion)
