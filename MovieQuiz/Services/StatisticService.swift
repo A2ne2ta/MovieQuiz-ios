@@ -13,8 +13,8 @@ protocol StatisticService {
     var totalAccuracy: Double { get }
     var gamesCount: Int { get }
     var bestGame: GameRecord { get }
-//    var totalQuestions: Int { get }
-//    var totalCorrectAnswers: Int { get }
+    var totalQuestions: Int { get }
+    var totalCorrectAnswers: Int { get }
 }
 
 struct GameRecord: Codable {

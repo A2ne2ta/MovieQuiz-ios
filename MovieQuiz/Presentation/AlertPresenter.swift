@@ -7,7 +7,7 @@
 import UIKit
 import Foundation
 
-class AlertPresenter : AlertPresenterProtocol {
+final class AlertPresenter : AlertPresenterProtocol {
     
     weak var delegate: AlertPresenterDelegate?
     
