@@ -7,6 +7,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     @IBOutlet private var counterLabel: UILabel!
     
    
+    @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     // переменная со счётчиком правильных ответов, начальное значение закономерно 0
     private var correctAnswers = 0
@@ -24,16 +25,24 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        questionFactory = QuestionFactory()
-        questionFactory?.delegate = self
-        // берём текущий вопрос из массива вопросов по индексу текущего вопроса
-        questionFactory?.requestNextQuestion()
+        imageView.layer.cornerRadius = 20
+         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+         statisticService = StatisticServiceImplementation()
+
+         showLoadingIndicator()
+         questionFactory?.loadData()
         
+//        questionFactory = QuestionFactory()
+//        questionFactory?.delegate = self
+//        // берём текущий вопрос из массива вопросов по индексу текущего вопроса
+//        questionFactory?.requestNextQuestion()
+//
         alertPresenter = AlertPresenter()
         alertPresenter?.delegate = self
-        
+
         statisticService = StatisticServiceImplementation()
     }
+    
     
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
@@ -124,7 +133,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // метод конвертации, который принимает моковый вопрос и возвращает вью модель для экрана вопроса
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel( // 1
-            image: UIImage(named: model.image) ?? UIImage(), // 2
+            image: UIImage(data: model.image) ?? UIImage(), // 2
             question: model.text, // 3
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)") // 4
         return questionStep
@@ -137,30 +146,29 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         counterLabel.text = step.questionNumber
     }
     
-    // приватный метод для показа результатов раунда квиза
-    // принимает вью модель QuizResultsViewModel и ничего не возвращает
-    private func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController(
-            title: result.title,
-            message: result.text,
-            preferredStyle: .alert)
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // говорим, что индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // включаем анимацию
+    }
+    
+    private func showNetworkError(message: String) {
+        didLoadDataFromServer() // скрываем индикатор загрузки
         
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self]_ in
-            guard let self = self else {return}
-            
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            
-            self.questionFactory?.requestNextQuestion()
-        }
+        let model = AlertModel(
+            title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз"
+        )
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.showNextQuestionOrResults()
-        }
-        
-        alert.addAction(action)
-        
-        self.present(alert, animated: true, completion: nil)
+        alertPresenter?.show(alert: model, on: self)
+    }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+    }
+
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
     }
 }
